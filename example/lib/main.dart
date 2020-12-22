@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_link_preview/flutter_link_preview.dart';
 
@@ -87,6 +88,9 @@ class _MyHomePageState extends State<MyHomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               TextField(controller: _controller),
+              const CupertinoActivityIndicator(
+                radius: 10,
+              ),
               Row(
                 children: <Widget>[
                   RaisedButton(

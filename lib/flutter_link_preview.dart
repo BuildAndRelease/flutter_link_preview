@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'package:flutter/material.dart';
+import 'package:flutter_link_preview/link_fetch.dart';
 import 'package:gbk2utf8/gbk2utf8.dart';
 import 'package:html/dom.dart' hide Text;
 import 'package:html/parser.dart' as parser;

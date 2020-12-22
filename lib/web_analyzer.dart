@@ -37,7 +37,7 @@ class WebVideoInfo extends WebImageInfo {
 class WebAnalyzer {
   static final Map<String, InfoBase> _map = {};
   static final RegExp _bodyReg =
-  RegExp(r"<body[^>]*>([\s\S]*?)<\/body>", caseSensitive: false);
+      RegExp(r"<body[^>]*>([\s\S]*?)<\/body>", caseSensitive: false);
   static final RegExp _htmlReg = RegExp(
       r"(<head[^>]*>([\s\S]*?)<\/head>)|(<script[^>]*>([\s\S]*?)<\/script>)|(<style[^>]*>([\s\S]*?)<\/style>)|(<[^>]+>)|(<link[^>]*>([\s\S]*?)<\/link>)|(<[^>]+>)",
       caseSensitive: false);
@@ -46,7 +46,7 @@ class WebAnalyzer {
       caseSensitive: false,
       dotAll: true);
   static final RegExp _titleReg =
-  RegExp("(title|icon|description|image)", caseSensitive: false);
+      RegExp("(title|icon|description|image)", caseSensitive: false);
   static final RegExp _lineReg = RegExp(r"[\n\r]|&nbsp;|&gt;");
   static final RegExp _spaceReg = RegExp(r"\s+");
 
@@ -72,8 +72,8 @@ class WebAnalyzer {
   /// return [InfoBase]
   static Future<InfoBase> getInfo(String url,
       {Duration cache = const Duration(hours: 24),
-        bool multimedia = true,
-        bool useMultithread = false}) async {
+      bool multimedia = true,
+      bool useMultithread = false}) async {
     // final start = DateTime.now();
 
     InfoBase info = getInfoFromCache(url);
@@ -98,12 +98,21 @@ class WebAnalyzer {
   }
 
   static Future<InfoBase> _getInfo(String url, bool multimedia) async {
-    final response = await _requestUrl(url);
-
-    if (response == null) return null;
-    // print("$url ${response.statusCode}");
+    Map<String, dynamic> result = {};
+    if (Platform.isIOS) {
+      result = await LinkFetch.linkFetch(url: url);
+      if (result == null) return null;
+    } else {
+      final response = await _requestUrl(url);
+      if (response == null) return null;
+      result['content-type'] = response.headers['content-type'];
+      result['data'] = response.bodyBytes;
+      result['status_code'] = response.statusCode;
+      result['url'] = response.request.url.toString();
+      print("$url ${response.statusCode}");
+    }
     if (multimedia) {
-      final String contentType = response.headers["content-type"];
+      final String contentType = result["content-type"];
       if (contentType != null) {
         if (contentType.contains("image/")) {
           return WebImageInfo(image: url);
@@ -113,7 +122,7 @@ class WebAnalyzer {
       }
     }
 
-    return _getWebInfo(response, url, multimedia);
+    return _getWebInfo(result, url, multimedia);
   }
 
   static Future<InfoBase> _getInfoByIsolate(String url, bool multimedia) async {
@@ -169,7 +178,7 @@ class WebAnalyzer {
 
   static final Map<String, String> _cookies = {
     "weibo.com":
-    "YF-Page-G0=02467fca7cf40a590c28b8459d93fb95|1596707497|1596707497; SUB=_2AkMod12Af8NxqwJRmf8WxGjna49_ygnEieKeK6xbJRMxHRl-yT9kqlcftRB6A_dzb7xq29tqJiOUtDsy806R_ZoEGgwS; SUBP=0033WrSXqPxfM72-Ws9jqgMF55529P9D9W59fYdi4BXCzHNAH7GabuIJ"
+        "YF-Page-G0=02467fca7cf40a590c28b8459d93fb95|1596707497|1596707497; SUB=_2AkMod12Af8NxqwJRmf8WxGjna49_ygnEieKeK6xbJRMxHRl-yT9kqlcftRB6A_dzb7xq29tqJiOUtDsy806R_ZoEGgwS; SUBP=0033WrSXqPxfM72-Ws9jqgMF55529P9D9W59fYdi4BXCzHNAH7GabuIJ"
   };
 
   static bool _certificateCheck(X509Certificate cert, String host, int port) =>
@@ -180,8 +189,7 @@ class WebAnalyzer {
     if (url.contains("m.toutiaoimg.cn")) useDesktopAgent = false;
     Response res;
     final uri = Uri.parse(url);
-    final ioClient = HttpClient()
-      ..badCertificateCallback = _certificateCheck;
+    final ioClient = HttpClient()..badCertificateCallback = _certificateCheck;
     final client = IOClient(ioClient);
     final request = Request('GET', uri)
       ..followRedirects = false
@@ -248,15 +256,15 @@ class WebAnalyzer {
     return res;
   }
 
-  static Future<InfoBase> _getWebInfo(Response response, String url,
-      bool multimedia) async {
-    if (response.statusCode == HttpStatus.ok) {
+  static Future<InfoBase> _getWebInfo(
+      Map<String, dynamic> response, String url, bool multimedia) async {
+    if (response['status_code'].toString() == HttpStatus.ok.toString()) {
       String html;
       try {
-        html = const Utf8Decoder().convert(response.bodyBytes);
+        html = const Utf8Decoder().convert(response['data']);
       } catch (e) {
         try {
-          html = gbk.decode(response.bodyBytes);
+          html = gbk.decode(response['data']);
         } catch (e) {
           print("Web page resolution failure from:$url Error:$e");
         }
@@ -285,7 +293,7 @@ class WebAnalyzer {
 
       String title = _analyzeTitle(document);
       String description =
-      _analyzeDescription(document, html)?.replaceAll(r"\x0a", " ");
+          _analyzeDescription(document, html)?.replaceAll(r"\x0a", " ");
       if (!isNotEmpty(title)) {
         title = description;
         description = null;
@@ -296,7 +304,7 @@ class WebAnalyzer {
         icon: _analyzeIcon(document, uri),
         description: description,
         image: _analyzeImage(document, uri),
-        redirectUrl: response.request.url.toString(),
+        redirectUrl: response['url'].toString(),
       );
       return info;
     }
@@ -331,8 +339,8 @@ class WebAnalyzer {
     return null;
   }
 
-  static String _getMetaContent(Document document, String property,
-      String propertyValue) {
+  static String _getMetaContent(
+      Document document, String property, String propertyValue) {
     final meta = document.head.getElementsByTagName("meta");
     final ele = meta.firstWhere((e) => e.attributes[property] == propertyValue,
         orElse: () => null);
