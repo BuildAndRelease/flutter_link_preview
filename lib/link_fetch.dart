@@ -15,7 +15,7 @@ class LinkFetch {
         'content-type': result['content-type'],
         "error": result['error'],
         'status_code': result['status_code'],
-        'url': result['status_code'],
+        'url': result['url'],
       };
     } catch (e) {
       print(e.toString());
