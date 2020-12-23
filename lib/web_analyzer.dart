@@ -105,10 +105,10 @@ class WebAnalyzer {
     } else {
       final response = await _requestUrl(url);
       if (response == null) return null;
-      result['content-type'] = response.headers['content-type'];
-      result['data'] = response.bodyBytes;
-      result['status_code'] = response.statusCode;
-      result['url'] = response.request.url.toString();
+      result['content-type'] = response.headers['content-type'] ?? "";
+      result['data'] = response.bodyBytes ?? Uint8List(0);
+      result['status_code'] = response.statusCode ?? "";
+      result['url'] = response.request.url.toString() ?? "";
       print("$url ${response.statusCode}");
     }
     if (multimedia) {

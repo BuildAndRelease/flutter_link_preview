@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,11 +12,11 @@ class LinkFetch {
       final result = await _channel
           .invokeMethod("linkFetch", <String, dynamic>{"url": url ?? ""});
       return <String, dynamic>{
-        'data': result['data'],
-        'content-type': result['content-type'],
-        "error": result['error'],
-        'status_code': result['status_code'],
-        'url': result['url'],
+        'data': result['data'] ?? Uint8List(0),
+        'content-type': result['content-type'] ?? "",
+        "error": result['error'] ?? "",
+        'status_code': result['status_code'] ?? "",
+        'url': result['url'] ?? "",
       };
     } catch (e) {
       print(e.toString());

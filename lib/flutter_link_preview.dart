@@ -3,6 +3,7 @@ library flutter_link_preview;
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_link_preview/link_fetch.dart';
 import 'package:gbk2utf8/gbk2utf8.dart';
