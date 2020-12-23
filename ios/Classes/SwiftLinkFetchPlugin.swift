@@ -44,7 +44,7 @@ public class SwiftLinkFetchPlugin: NSObject, FlutterPlugin, UIAlertViewDelegate,
                 result(dictionary)
             }
             break
-        case "linkDirectFetch":
+        case "linkFetchDirect":
             fetchLinkInfo(url: url, type: "direct") { (dictionary) in
                 result(dictionary)
             }
