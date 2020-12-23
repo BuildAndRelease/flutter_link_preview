@@ -100,7 +100,7 @@ class WebAnalyzer {
   static Future<InfoBase> _getInfo(String url, bool multimedia) async {
     Map<String, dynamic> result = {};
     if (Platform.isIOS) {
-      result = await LinkFetch.linkFetch(url: url);
+      result = await LinkFetch.linkFetchWithFilterLargeFile(url: url);
       if (result == null) return null;
     } else {
       final response = await _requestUrl(url);
