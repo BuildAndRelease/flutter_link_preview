@@ -98,10 +98,12 @@ public class SwiftLinkFetchPlugin: NSObject, FlutterPlugin, UIAlertViewDelegate,
         request.timeoutInterval = 5
         weak var weakSelf =  self
         let sessionTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
-            let (info, canContinue) = weakSelf?.canFetchContinue(data: data, response: response, error: error) ?? (Dictionary(), false)
-            if (!canContinue) {
-                completionHandler(info)
-                return
+            if error == nil, response != nil {
+                let (info, canContinue) = weakSelf?.canFetchContinue(data: data, response: response, error: error) ?? (Dictionary(), false)
+                if (!canContinue) {
+                    completionHandler(info)
+                    return
+                }
             }
             request.httpMethod = "GET"
             let sessionGetTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
