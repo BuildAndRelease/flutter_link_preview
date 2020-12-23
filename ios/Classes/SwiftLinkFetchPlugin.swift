@@ -40,56 +40,80 @@ public class SwiftLinkFetchPlugin: NSObject, FlutterPlugin, UIAlertViewDelegate,
 //        let url = "https://fb-cdn.fanbook.mobi/fanbook/download/apk/Fanbook_1.3.1_27.apk"
         switch (call.method) {
         case "linkFetch":
-            let url = URL(string: url)
-            var request = URLRequest(url: url!, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 5.0)
-            request.httpMethod = "HEAD"
-            request.addValue("cache-control", forHTTPHeaderField: "no-cache")
-            request.addValue("accept", forHTTPHeaderField: "*/*")
-            request.httpShouldHandleCookies = true
-            request.timeoutInterval = 5
-            let sessionTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
-                let statusCode = error == nil ? "200" : "201"
-                if let response = response, response is HTTPURLResponse{
-                    let allHeader = (response as! HTTPURLResponse).allHeaderFields
-                    var length = "0"
-                    var mimeType = ""
-                    for header in allHeader {
-                        if header.key is String {
-                            switch (header.key as! String) {
-                            case "Content-Length":
-                                length = String(describing: header.value)
-                                break
-                            case "Content-Type":
-                                mimeType = String(describing: header.value)
-                                break
-                            default:
-                                break
-                            }
-                        }
-                    }
-                    if Int(length) ?? 0 >= 50 * 1024 * 1024 {
-                        result(["data":Data(), "content-type": mimeType, "url" :response.url?.absoluteString ?? "", "status_code": statusCode, "error": ""])
-                        return
-                    }
-                    if !mimeType.contains("text/html"), !mimeType.contains("text/asp") {
-                        result(["data":Data(), "content-type": mimeType, "url" :response.url?.absoluteString ?? "", "status_code": statusCode, "error":(error?.localizedDescription ?? "")])
-                        return
-                    }
-                }
-                request.httpMethod = "GET"
-                let sessionGetTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
-                    var statusCode = error == nil ? "200" : "201"
-                    if let response = response, response is HTTPURLResponse {
-                        statusCode = "\((response as! HTTPURLResponse).statusCode)"
-                    }
-                    result(["data":data ?? Data(), "content-type": (response?.mimeType ?? ""), "url" :response?.url?.absoluteString ?? "", "status_code": statusCode, "error":(error?.localizedDescription ?? "")])
-                }
-                sessionGetTask.resume()
+            fetchLinkInfo(url: url, type: "judge") { (dictionary) in
+                result(dictionary)
             }
-            sessionTask.resume()
+            break
+        case "linkDirectFetch":
+            fetchLinkInfo(url: url, type: "direct") { (dictionary) in
+                result(dictionary)
+            }
             break
         default:
             result(FlutterMethodNotImplemented)
         }
+    }
+    
+    func fetchLinkInfo(url : String, type : String, completionHandler : @escaping (Dictionary<String, Any>) -> Void) {
+        let url = URL(string: url) ?? URL(string: "")
+        var request = URLRequest(url: url!, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 5.0)
+        request.httpMethod = type == "direct" ? "GET" : "HEAD"
+        request.addValue("cache-control", forHTTPHeaderField: "no-cache")
+        request.addValue("accept", forHTTPHeaderField: "*/*")
+        request.httpShouldHandleCookies = true
+        request.timeoutInterval = 5
+        weak var weakSelf =  self
+        let sessionTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
+            if type == "direct" {
+                completionHandler(["data":data ?? Data(), "content-type": (response?.mimeType ?? ""), "url" :response?.url?.absoluteString ?? "", "status_code": "200", "error": ""])
+            }else {
+                let (info, canContinue) = weakSelf?.canFetchContinue(data: data, response: response, error: error) ?? (Dictionary(), false)
+                if (!canContinue) {
+                    completionHandler(info)
+                    return
+                }
+                request.httpMethod = "GET"
+                let sessionGetTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
+                    let (info, canContinue) = weakSelf?.canFetchContinue(data: data, response: response, error: error) ?? (Dictionary(), false)
+                    if (!canContinue) {
+                        completionHandler(info)
+                        return
+                    }
+                    completionHandler(["data":data ?? Data(), "content-type": (response?.mimeType ?? ""), "url" :response?.url?.absoluteString ?? "", "status_code": "200", "error": ""])
+                }
+                sessionGetTask.resume()
+            }
+        }
+        sessionTask.resume()
+    }
+    
+    func canFetchContinue(data : Data?, response : URLResponse?, error : Error?) -> ((Dictionary<String, Any>), Bool) {
+        let statusCode = error == nil ? "200" : "201"
+        if let response = response, response is HTTPURLResponse{
+            let allHeader = (response as! HTTPURLResponse).allHeaderFields
+            var length = "0"
+            var mimeType = ""
+            for header in allHeader {
+                if header.key is String {
+                    switch (header.key as! String) {
+                    case "Content-Length":
+                        length = String(describing: header.value)
+                        break
+                    case "Content-Type":
+                        mimeType = String(describing: header.value)
+                        break
+                    default:
+                        break
+                    }
+                }
+            }
+            if Int(length) ?? 0 >= 50 * 1024 * 1024 {
+                return(["data":Data(), "content-type": mimeType, "url" :response.url?.absoluteString ?? "", "status_code": statusCode, "error": ""], false)
+            }
+            if !mimeType.contains("text/html"), !mimeType.contains("text/asp") {
+                return(["data":Data(), "content-type": mimeType, "url" :response.url?.absoluteString ?? "", "status_code": statusCode, "error":(error?.localizedDescription ?? "")], false)
+            }
+        }
+        return (Dictionary(), true)
     }
 }
