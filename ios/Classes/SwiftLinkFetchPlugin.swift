@@ -140,6 +140,9 @@ public class SwiftLinkFetchPlugin: NSObject, FlutterPlugin, UIAlertViewDelegate 
                     }
                 }
             }
+            if (response as! HTTPURLResponse).statusCode != 200 {
+                return(["data":Data(), "content-type": mimeType, "url" :response.url?.absoluteString ?? "", "status_code": statusCode, "error": ""], false)
+            }
             if Int(length) ?? 0 >= 50 * 1024 * 1024 {
                 return(["data":Data(), "content-type": mimeType, "url" :response.url?.absoluteString ?? "", "status_code": statusCode, "error": ""], false)
             }
