@@ -2,7 +2,7 @@ import Flutter
 import UIKit
 import Photos
 
-public class SwiftLinkFetchPlugin: NSObject, FlutterPlugin, UIAlertViewDelegate, URLSessionDataDelegate {
+public class SwiftLinkFetchPlugin: NSObject, FlutterPlugin, UIAlertViewDelegate {
     var controller: UIViewController!
     var imagesResult: FlutterResult?
     var messenger: FlutterBinaryMessenger;
@@ -89,14 +89,15 @@ public class SwiftLinkFetchPlugin: NSObject, FlutterPlugin, UIAlertViewDelegate,
     }
     
     func linkFetchWithFilterLargeFile(url : String, completionHandler : @escaping (Dictionary<String, Any>) -> Void) {
-        let url = URL(string: url) ?? URL(string: "")
-        var request = URLRequest(url: url!, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 5.0)
+        let link = URL(string: url) ?? URL(string: "")
+        var request = URLRequest(url: link!, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 5.0)
         request.httpMethod = "HEAD"
-        request.addValue("cache-control", forHTTPHeaderField: "no-cache")
-        request.addValue("accept", forHTTPHeaderField: "*/*")
+        request.addValue("no-cache", forHTTPHeaderField: "cache-control")
+        request.addValue("*/*", forHTTPHeaderField: "accept")
+        request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36", forHTTPHeaderField: "User-Agent")
         request.httpShouldHandleCookies = true
         request.timeoutInterval = 5
-        weak var weakSelf =  self
+        weak var weakSelf = self
         let sessionTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if error == nil, response != nil {
                 let (info, canContinue) = weakSelf?.canFetchContinue(data: data, response: response, error: error) ?? (Dictionary(), false)
