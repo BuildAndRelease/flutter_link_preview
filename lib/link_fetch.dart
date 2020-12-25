@@ -23,7 +23,7 @@ class LinkFetch {
     } catch (e) {
       print(e.toString());
     }
-    return null;
+    return {};
   }
 
   // 不过滤任何信息，直接获取消息体
@@ -41,7 +41,7 @@ class LinkFetch {
     } catch (e) {
       print(e.toString());
     }
-    return null;
+    return {};
   }
 
   // 仅获取头文件
@@ -59,6 +59,6 @@ class LinkFetch {
     } catch (e) {
       print(e.toString());
     }
-    return null;
+    return {};
   }
 }
