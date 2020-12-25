@@ -45,18 +45,17 @@ class LinkFetch {
   }
 
   // 仅获取头文件
-  static Future<Map<String, dynamic>> linkFetchHead(
+  static Future<Map<String, String>> linkFetchHead(
       {@required String url}) async {
     try {
       final result = await _channel
           .invokeMethod("linkFetchHead", <String, dynamic>{"url": url ?? ""});
-      return <String, dynamic>{
-        'data': result['data'] ?? Uint8List(0),
-        'content-type': result['content-type'] ?? "",
-        "error": result['error'] ?? "",
-        'status_code': result['status_code'] ?? "",
-        'url': result['url'] ?? "",
-      };
+      final formatResult = <String, String>{};
+      result.forEach((key, value) {
+        formatResult[key.toString().toLowerCase()] =
+            value.toString().toLowerCase();
+      });
+      return formatResult;
     } catch (e) {
       print(e.toString());
     }
