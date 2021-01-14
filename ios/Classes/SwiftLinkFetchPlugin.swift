@@ -62,8 +62,9 @@ public class SwiftLinkFetchPlugin: NSObject, FlutterPlugin, UIAlertViewDelegate,
         let url = URL(string: url) ?? URL(string: "")
         var request = URLRequest(url: url!, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 5.0)
         request.httpMethod = "GET"
-        request.addValue("cache-control", forHTTPHeaderField: "no-cache")
-        request.addValue("accept", forHTTPHeaderField: "*/*")
+        request.addValue("no-cache", forHTTPHeaderField: "cache-control")
+        request.addValue("*/*", forHTTPHeaderField: "accept")
+        request.addValue("Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1", forHTTPHeaderField: "User-Agent")
         request.httpShouldHandleCookies = true
         request.timeoutInterval = 5
         let sessionTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
