@@ -22,7 +22,7 @@ class LinkFetchHeader : NSObject, URLSessionDataDelegate{
     }
 
     func fetch() {
-        guard let link = URL(string: self.url ?? "") else {
+        guard let link = URL(string: self.url?.urlEncoded() ?? "") else {
             self.completionHandler?(Dictionary<AnyHashable, Any>())
             return
         }

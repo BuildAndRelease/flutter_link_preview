@@ -59,7 +59,7 @@ public class SwiftLinkFetchPlugin: NSObject, FlutterPlugin, UIAlertViewDelegate,
     }
     
     func fetchLinkInfo(url : String, completionHandler : @escaping (Dictionary<String, Any>) -> Void) {
-        guard let url = URL(string: url) else {
+        guard let url = URL(string: url.urlEncoded()) else {
             completionHandler(Dictionary<String, Any>())
             return
         }
