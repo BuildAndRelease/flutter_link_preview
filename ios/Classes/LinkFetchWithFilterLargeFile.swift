@@ -9,8 +9,8 @@ import Foundation
 
 class LinkFetchWithFilterLargeFile : NSObject, URLSessionDataDelegate{
     
-    var completionHandler : ((Dictionary<String, Any>) -> Void)
-    var url : String
+    var completionHandler : ((Dictionary<String, Any>) -> Void)?
+    var url : String?
     var resultData = Data()
     var response : URLResponse?
     
@@ -25,8 +25,11 @@ class LinkFetchWithFilterLargeFile : NSObject, URLSessionDataDelegate{
     }
     
     func fetch() {
-        let link = URL(string: self.url) ?? URL(string: "")
-        var request = URLRequest(url: link!, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 5.0)
+        guard let link = URL(string: self.url ?? "") else {
+            self.completionHandler?(Dictionary<String, Any>())
+            return
+        }
+        var request = URLRequest(url: link, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 5.0)
         request.httpMethod = "GET"
         request.addValue("no-cache", forHTTPHeaderField: "cache-control")
         request.addValue("*/*", forHTTPHeaderField: "accept")
@@ -42,7 +45,7 @@ class LinkFetchWithFilterLargeFile : NSObject, URLSessionDataDelegate{
         let (info, canContinue) = canFetchContinue(data: nil, response: response, error: nil)
         if (!canContinue) {
             completionHandler(.cancel)
-            self.completionHandler(info)
+            self.completionHandler?(info)
         }else {
             completionHandler(.allow)
         }
@@ -52,10 +55,10 @@ class LinkFetchWithFilterLargeFile : NSObject, URLSessionDataDelegate{
         switch dataTask.state {
         case .canceling:
             resultData.append(data)
-            self.completionHandler(["data":Data(), "content-type": response?.mimeType ?? "", "url" :dataTask.currentRequest?.url?.absoluteString ?? "", "status_code": "201", "error": "reuqest canceling"])
+            self.completionHandler?(["data":Data(), "content-type": response?.mimeType ?? "", "url" :dataTask.currentRequest?.url?.absoluteString ?? "", "status_code": "201", "error": "reuqest canceling"])
         case .suspended:
             resultData.append(data)
-            self.completionHandler(["data":Data(), "content-type": response?.mimeType ?? "", "url" :dataTask.currentRequest?.url?.absoluteString ?? "", "status_code": "201", "error": "reuqest suspended"])
+            self.completionHandler?(["data":Data(), "content-type": response?.mimeType ?? "", "url" :dataTask.currentRequest?.url?.absoluteString ?? "", "status_code": "201", "error": "reuqest suspended"])
         case .running:
             resultData.append(data)
         case .completed:
@@ -71,9 +74,9 @@ class LinkFetchWithFilterLargeFile : NSObject, URLSessionDataDelegate{
     
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if error != nil {
-            self.completionHandler(["data":Data(), "content-type": task.response?.mimeType ?? "", "url" :task.response?.url?.absoluteString ?? "", "status_code": "201", "error": error?.localizedDescription ?? ""])
+            self.completionHandler?(["data":Data(), "content-type": task.response?.mimeType ?? "", "url" :task.response?.url?.absoluteString ?? "", "status_code": "201", "error": error?.localizedDescription ?? ""])
         }else {
-            self.completionHandler(["data":resultData, "content-type": task.response?.mimeType ?? "", "url" :task.response?.url?.absoluteString ?? "", "status_code": "200", "error": ""])
+            self.completionHandler?(["data":resultData, "content-type": task.response?.mimeType ?? "", "url" :task.response?.url?.absoluteString ?? "", "status_code": "200", "error": ""])
         }
         session.finishTasksAndInvalidate()
     }

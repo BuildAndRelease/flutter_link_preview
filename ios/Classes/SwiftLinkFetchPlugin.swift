@@ -59,8 +59,11 @@ public class SwiftLinkFetchPlugin: NSObject, FlutterPlugin, UIAlertViewDelegate,
     }
     
     func fetchLinkInfo(url : String, completionHandler : @escaping (Dictionary<String, Any>) -> Void) {
-        let url = URL(string: url) ?? URL(string: "")
-        var request = URLRequest(url: url!, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 5.0)
+        guard let url = URL(string: url) else {
+            completionHandler(Dictionary<String, Any>())
+            return
+        }
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 5.0)
         request.httpMethod = "GET"
         request.addValue("no-cache", forHTTPHeaderField: "cache-control")
         request.addValue("*/*", forHTTPHeaderField: "accept")
