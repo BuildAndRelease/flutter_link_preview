@@ -22,20 +22,20 @@ class LinkFetchHeader : NSObject, URLSessionDataDelegate{
     }
 
     func fetch() {
-        if let link = URL(string: self.url ?? "") {
-            var request = URLRequest(url: link, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 5.0)
-            request.httpMethod = "GET"
-            request.addValue("no-cache", forHTTPHeaderField: "cache-control")
-            request.addValue("*/*", forHTTPHeaderField: "accept")
-            request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36", forHTTPHeaderField: "User-Agent")
-            request.httpShouldHandleCookies = true
-            request.timeoutInterval = 5
-            
-            let session = URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: nil)
-            session.dataTask(with: request).resume()
-        }else {
+        guard let link = URL(string: self.url ?? "") else {
             self.completionHandler?(Dictionary<AnyHashable, Any>())
+            return
         }
+        var request = URLRequest(url: link, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 5.0)
+        request.httpMethod = "GET"
+        request.addValue("no-cache", forHTTPHeaderField: "cache-control")
+        request.addValue("*/*", forHTTPHeaderField: "accept")
+        request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36", forHTTPHeaderField: "User-Agent")
+        request.httpShouldHandleCookies = true
+        request.timeoutInterval = 5
+        
+        let session = URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: nil)
+        session.dataTask(with: request).resume()
     }
     
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
