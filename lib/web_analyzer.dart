@@ -408,7 +408,7 @@ class WebAnalyzer {
     if (metaIcon != null) {
       icon = metaIcon.attributes["href"];
     } else {
-      return "${uri.origin}/favicon.ico";
+      return "";
     }
 
     return _handleUrl(uri, icon);
