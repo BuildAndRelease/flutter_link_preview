@@ -380,7 +380,38 @@ class WebAnalyzer {
   }
 
   static String _analyzeIcon(Document document, Uri uri) {
-    return "${uri.origin}/favicon.ico";
+    final meta = document.head.getElementsByTagName("link");
+    String icon = "";
+    // get icon first
+    var metaIcon = meta.firstWhere((e) {
+      final rel = (e.attributes["rel"] ?? "").toLowerCase();
+      if (rel == "icon") {
+        icon = e.attributes["href"];
+        if (icon != null && !icon.toLowerCase().contains(".svg")) {
+          return true;
+        }
+      }
+      return false;
+    }, orElse: () => null);
+
+    metaIcon ??= meta.firstWhere((e) {
+      final rel = (e.attributes["rel"] ?? "").toLowerCase();
+      if (rel == "shortcut icon") {
+        icon = e.attributes["href"];
+        if (icon != null && !icon.toLowerCase().contains(".svg")) {
+          return true;
+        }
+      }
+      return false;
+    }, orElse: () => null);
+
+    if (metaIcon != null) {
+      icon = metaIcon.attributes["href"];
+    } else {
+      return "${uri.origin}/favicon.ico";
+    }
+
+    return _handleUrl(uri, icon);
   }
 
   static String _analyzeImage(Document document, Uri uri) {
