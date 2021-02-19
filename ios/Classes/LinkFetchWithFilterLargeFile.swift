@@ -34,6 +34,9 @@ class LinkFetchWithFilterLargeFile : NSObject, URLSessionDataDelegate{
         request.addValue("no-cache", forHTTPHeaderField: "cache-control")
         request.addValue("*/*", forHTTPHeaderField: "accept")
         request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36", forHTTPHeaderField: "User-Agent")
+        if (link.host ?? "") == "weibo.com" {
+            request.addValue("YF-Page-G0=02467fca7cf40a590c28b8459d93fb95|1596707497|1596707497; SUB=_2AkMod12Af8NxqwJRmf8WxGjna49_ygnEieKeK6xbJRMxHRl-yT9kqlcftRB6A_dzb7xq29tqJiOUtDsy806R_ZoEGgwS; SUBP=0033WrSXqPxfM72-Ws9jqgMF55529P9D9W59fYdi4BXCzHNAH7GabuIJ", forHTTPHeaderField: "Cookie")
+        }
         request.httpShouldHandleCookies = true
         request.timeoutInterval = 5
         let session = URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: nil)
