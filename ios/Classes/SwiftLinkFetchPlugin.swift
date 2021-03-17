@@ -34,7 +34,11 @@ public class SwiftLinkFetchPlugin: NSObject, FlutterPlugin, UIAlertViewDelegate,
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let arguments = call.arguments as! Dictionary<String, AnyObject>
-        let url = (arguments["url"] as? String) ?? ""
+        let encodeUrl = ((arguments["encodeUrl"] as? String) ?? "false")
+        var url = (arguments["url"] as? String) ?? ""
+        if encodeUrl == "true" {
+            url = url.urlEncoded()
+        }
         switch (call.method) {
         case "linkFetch":
             fetchLinkInfo(url: url) { (dictionary) in
@@ -59,7 +63,7 @@ public class SwiftLinkFetchPlugin: NSObject, FlutterPlugin, UIAlertViewDelegate,
     }
     
     func fetchLinkInfo(url : String, completionHandler : @escaping (Dictionary<String, Any>) -> Void) {
-        guard let url = URL(string: url.urlEncoded()) else {
+        guard let url = URL(string: url) else {
             completionHandler(Dictionary<String, Any>())
             return
         }
