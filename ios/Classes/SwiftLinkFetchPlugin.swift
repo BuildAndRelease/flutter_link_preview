@@ -34,7 +34,7 @@ public class SwiftLinkFetchPlugin: NSObject, FlutterPlugin, UIAlertViewDelegate,
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let arguments = call.arguments as! Dictionary<String, AnyObject>
-        let encodeUrl = ((arguments["encodeUrl"] as? String) ?? "false")
+        let encodeUrl = ((arguments["encodeUrl"] as? String) ?? "true")
         var url = (arguments["url"] as? String) ?? ""
         if encodeUrl == "true" {
             url = url.urlEncoded()
