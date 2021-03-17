@@ -67,7 +67,7 @@ public class SwiftLinkFetchPlugin: NSObject, FlutterPlugin, UIAlertViewDelegate,
         request.httpMethod = "GET"
         request.addValue("no-cache", forHTTPHeaderField: "cache-control")
         request.addValue("*/*", forHTTPHeaderField: "accept")
-        if let hostString = url.host , (hostString.contains("weibo.com") || hostString.contains("weibo.cn")) {
+        if let hostString = url.host , (hostString.contains("weibo.com") || hostString.contains("weibo.cn") || hostString.contains("qq.com")) {
             request.addValue("YF-Page-G0=02467fca7cf40a590c28b8459d93fb95|1596707497|1596707497; SUB=_2AkMod12Af8NxqwJRmf8WxGjna49_ygnEieKeK6xbJRMxHRl-yT9kqlcftRB6A_dzb7xq29tqJiOUtDsy806R_ZoEGgwS; SUBP=0033WrSXqPxfM72-Ws9jqgMF55529P9D9W59fYdi4BXCzHNAH7GabuIJ", forHTTPHeaderField: "Cookie")
             request.addValue("Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1", forHTTPHeaderField: "User-Agent")
         }else {
