@@ -146,7 +146,7 @@ class _MyHomePageState extends State<MyHomePage> {
         if (info == null) return const SizedBox();
         if (info is WebImageInfo) {
           return CachedNetworkImage(
-            imageUrl: info.image,
+            imageUrl: info.mediaUrl,
             fit: BoxFit.contain,
           );
         }
@@ -195,10 +195,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
-              if (WebAnalyzer.isNotEmpty(webInfo.image)) ...[
+              if (WebAnalyzer.isNotEmpty(webInfo.mediaUrl)) ...[
                 const SizedBox(height: 8),
                 CachedNetworkImage(
-                  imageUrl: webInfo.image,
+                  imageUrl: webInfo.mediaUrl,
                   fit: BoxFit.contain,
                 ),
               ]

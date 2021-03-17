@@ -9,28 +9,31 @@ class WebInfo extends InfoBase {
   final String title;
   final String icon;
   final String description;
-  final String image;
+  final String mediaUrl;
   final String redirectUrl;
 
   WebInfo({
     this.title,
     this.icon,
     this.description,
-    this.image,
+    this.mediaUrl,
     this.redirectUrl,
   });
 }
 
 /// Image Information
-class WebImageInfo extends InfoBase {
-  final String image;
-
-  WebImageInfo({this.image});
+class WebImageInfo extends WebInfo {
+  WebImageInfo({String mediaUrl}) : super(mediaUrl: mediaUrl);
 }
 
 /// Video Information
-class WebVideoInfo extends WebImageInfo {
-  WebVideoInfo({String image}) : super(image: image);
+class WebVideoInfo extends WebInfo {
+  WebVideoInfo({String mediaUrl}) : super(mediaUrl: mediaUrl);
+}
+
+/// Video Information
+class WebAudioInfo extends WebInfo {
+  WebAudioInfo({String mediaUrl}) : super(mediaUrl: mediaUrl);
 }
 
 /// Web analyzer
@@ -115,9 +118,9 @@ class WebAnalyzer {
       final String contentType = result["content-type"];
       if (contentType != null) {
         if (contentType.contains("image/")) {
-          return WebImageInfo(image: url);
+          return WebImageInfo(mediaUrl: url);
         } else if (contentType.contains("video/")) {
-          return WebVideoInfo(image: url);
+          return WebVideoInfo(mediaUrl: url);
         }
       }
     }
@@ -138,11 +141,11 @@ class WebAnalyzer {
     if (res != null) {
       if (res[0] == "0") {
         info = WebInfo(
-            title: res[1], description: res[2], icon: res[3], image: res[4]);
+            title: res[1], description: res[2], icon: res[3], mediaUrl: res[4]);
       } else if (res[0] == "1") {
-        info = WebVideoInfo(image: res[1]);
+        info = WebVideoInfo(mediaUrl: res[1]);
       } else if (res[0] == "2") {
-        info = WebImageInfo(image: res[1]);
+        info = WebImageInfo(mediaUrl: res[1]);
       }
     }
 
@@ -164,11 +167,12 @@ class WebAnalyzer {
       final info = await _getInfo(url, multimedia);
 
       if (info is WebInfo) {
-        sender.send(["0", info.title, info.description, info.icon, info.image]);
+        sender.send(
+            ["0", info.title, info.description, info.icon, info.mediaUrl]);
       } else if (info is WebVideoInfo) {
-        sender.send(["1", info.image]);
+        sender.send(["1", info.mediaUrl]);
       } else if (info is WebImageInfo) {
-        sender.send(["2", info.image]);
+        sender.send(["2", info.mediaUrl]);
       } else {
         sender.send(null);
       }
@@ -307,7 +311,7 @@ class WebAnalyzer {
         title: title,
         icon: _analyzeIcon(document, uri),
         description: description,
-        image: _analyzeImage(document, uri),
+        mediaUrl: _analyzeImage(document, uri),
         redirectUrl: response['url'].toString(),
       );
       return info;
@@ -332,14 +336,14 @@ class WebAnalyzer {
   static InfoBase _analyzeGif(Document document, Uri uri) {
     if (_getMetaContent(document, "property", "og:image:type") == "image/gif") {
       final gif = _getMetaContent(document, "property", "og:image");
-      if (gif != null) return WebImageInfo(image: _handleUrl(uri, gif));
+      if (gif != null) return WebImageInfo(mediaUrl: _handleUrl(uri, gif));
     }
     return null;
   }
 
   static InfoBase _analyzeVideo(Document document, Uri uri) {
     final video = _getMetaContent(document, "property", "og:video");
-    if (video != null) return WebVideoInfo(image: _handleUrl(uri, video));
+    if (video != null) return WebVideoInfo(mediaUrl: _handleUrl(uri, video));
     return null;
   }
 
