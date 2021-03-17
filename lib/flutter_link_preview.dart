@@ -88,7 +88,7 @@ class _FlutterLinkPreviewState extends State<FlutterLinkPreview> {
 
     if (_info is WebImageInfo) {
       return Image.network(
-        (_info as WebImageInfo).image,
+        (_info as WebImageInfo).mediaUrl,
         fit: BoxFit.contain,
       );
     }
