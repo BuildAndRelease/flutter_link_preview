@@ -121,6 +121,8 @@ class WebAnalyzer {
           return WebImageInfo(mediaUrl: url);
         } else if (contentType.contains("video/")) {
           return WebVideoInfo(mediaUrl: url);
+        } else if (contentType.contains("audio/")) {
+          return WebAudioInfo(mediaUrl: url);
         }
       }
     }
@@ -146,6 +148,8 @@ class WebAnalyzer {
         info = WebVideoInfo(mediaUrl: res[1]);
       } else if (res[0] == "2") {
         info = WebImageInfo(mediaUrl: res[1]);
+      } else if (res[0] == "4") {
+        info = WebAudioInfo(mediaUrl: res[1]);
       }
     }
 
@@ -173,6 +177,8 @@ class WebAnalyzer {
         sender.send(["1", info.mediaUrl]);
       } else if (info is WebImageInfo) {
         sender.send(["2", info.mediaUrl]);
+      } else if (info is WebAudioInfo) {
+        sender.send(["4", info.mediaUrl]);
       } else {
         sender.send(null);
       }
