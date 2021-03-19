@@ -236,18 +236,18 @@ class WebAnalyzer {
     } else if (stream.statusCode == HttpStatus.ok) {
       /// 超过 100m 的网页不解析
       final contentLength = stream.headers["content-length"];
-      if (contentLength != null && contentLength.isNotEmpty) {
+      final contentType = stream.headers["content-type"];
+
+      if (contentType.contains("image/") ||
+          contentType.contains("video/") ||
+          contentType.contains("audio/")) {
+        client.close();
+        return Response("body", stream.statusCode, headers: stream.headers);
+      } else if (contentLength?.isNotEmpty ?? false) {
         if (double.parse(contentLength) > 100 * 1000 * 1000) {
           client.close();
           return null;
         }
-      }
-
-      final contentType = stream.headers["content-type"];
-
-      if (contentType.contains("image/") || contentType.contains("video/")) {
-        client.close();
-        return Response("body", stream.statusCode, headers: stream.headers);
       }
 
       if (contentType.contains("text/html") ||
