@@ -110,7 +110,7 @@ class WebAnalyzer {
       result['content-type'] = response.headers['content-type'] ?? "";
       result['data'] = response.bodyBytes ?? Uint8List(0);
       result['status_code'] = response.statusCode ?? "";
-      result['url'] = response.request.url.toString() ?? "";
+      result['url'] = response.request?.url.toString() ?? url ?? "";
       print("$url ${response.statusCode}");
     }
     if (multimedia) {
