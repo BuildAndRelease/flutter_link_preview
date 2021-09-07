@@ -221,7 +221,9 @@ class WebAnalyzer {
         final String location = stream.headers['location'];
         if (location != null) {
           url = location;
-          if (location.startsWith("/")) {
+          if (location.startsWith("//")) {
+            url = "${uri.scheme}:$location";
+          } else if (location.startsWith("/")) {
             url = uri.origin + location;
           }
         }
