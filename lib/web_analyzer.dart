@@ -75,16 +75,17 @@ class WebAnalyzer {
   static Future<InfoBase> getInfo(String url,
       {Duration cache = const Duration(hours: 24),
       bool multimedia = true,
-      bool useMultithread = false}) async {
-    // final start = DateTime.now();
-
+      bool useMultithread = false,
+      bool useDesktopAgent = true}) async {
     InfoBase info = getInfoFromCache(url);
     if (info != null) return info;
     try {
       if (useMultithread)
-        info = await _getInfoByIsolate(url, multimedia);
+        info = await _getInfoByIsolate(url, multimedia,
+            useDesktopAgent: useDesktopAgent);
       else
-        info = await _getInfo(url, multimedia);
+        info =
+            await _getInfo(url, multimedia, useDesktopAgent: useDesktopAgent);
 
       if (cache != null && info != null) {
         info._timeout = DateTime.now().add(cache);
@@ -94,18 +95,17 @@ class WebAnalyzer {
       print("Get web error:$url, Error:$e");
     }
 
-    // print("$url cost ${DateTime.now().difference(start).inMilliseconds}");
-
     return info;
   }
 
-  static Future<InfoBase> _getInfo(String url, bool multimedia) async {
+  static Future<InfoBase> _getInfo(String url, bool multimedia,
+      {useDesktopAgent = true}) async {
     Map<String, dynamic> result = {};
     if (Platform.isIOS) {
       result = await LinkFetch.linkFetchWithFilterLargeFile(url: url);
       if (result == null) return null;
     } else {
-      final response = await _requestUrl(url);
+      final response = await _requestUrl(url, useDesktopAgent: useDesktopAgent);
       if (response == null) return null;
       result['content-type'] = response.headers['content-type'] ?? "";
       result['data'] = response.bodyBytes ?? Uint8List(0);
@@ -129,9 +129,13 @@ class WebAnalyzer {
     return _getWebInfo(result, url, multimedia);
   }
 
-  static Future<InfoBase> _getInfoByIsolate(String url, bool multimedia) async {
+  static Future<InfoBase> _getInfoByIsolate(String url, bool multimedia,
+      {useDesktopAgent = true}) async {
     final sender = ReceivePort();
-    final Isolate isolate = await Isolate.spawn(_isolate, sender.sendPort);
+    final Isolate isolate = await Isolate.spawn(
+      (sendPort) => _isolate(sendPort, useDesktopAgent: useDesktopAgent),
+      sender.sendPort,
+    );
     final sendPort = await sender.first as SendPort;
     final answer = ReceivePort();
 
@@ -159,7 +163,7 @@ class WebAnalyzer {
     return info;
   }
 
-  static void _isolate(SendPort sendPort) {
+  static void _isolate(SendPort sendPort, {useDesktopAgent = true}) {
     final port = ReceivePort();
     sendPort.send(port.sendPort);
     port.listen((message) async {
@@ -167,7 +171,8 @@ class WebAnalyzer {
       final String url = message[1];
       final bool multimedia = message[2];
 
-      final info = await _getInfo(url, multimedia);
+      final info =
+          await _getInfo(url, multimedia, useDesktopAgent: useDesktopAgent);
 
       if (info is WebInfo) {
         sender.send(
@@ -232,8 +237,8 @@ class WebAnalyzer {
         }
         count++;
         client.close();
-        // print("Redirect ====> $url");
-        return _requestUrl(url, count: count, cookie: cookie);
+        return _requestUrl(url,
+            count: count, cookie: cookie, useDesktopAgent: useDesktopAgent);
       }
     } else if (stream.statusCode == HttpStatus.ok) {
       /// 超过 100m 的网页不解析
@@ -260,7 +265,10 @@ class WebAnalyzer {
           if (match != null) {
             final newUrl = match.group(1);
             if (newUrl != null) {
-              return _requestUrl(newUrl, count: count, cookie: cookie);
+              return _requestUrl(newUrl,
+                  count: count,
+                  cookie: cookie,
+                  useDesktopAgent: useDesktopAgent);
             }
           }
         }
