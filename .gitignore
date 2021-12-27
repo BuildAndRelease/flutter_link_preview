@@ -1,3 +1,10 @@
 example/build
 example/android/.idea
 example/.dart_tool
+.fvm/
+.idea/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
