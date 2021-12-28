@@ -13,7 +13,7 @@ dependencies:
   gbk2utf8:
     git:
       url: https://github.com/jing-pei/gbk2utf8.git
-      ref: master
+      ref: 2.0.0
   html: ^0.15.0
   http: ^0.13.4
 
