@@ -72,7 +72,7 @@ class WebAnalyzer {
 
   /// Get web information
   /// return [InfoBase]
-  static Future<InfoBase?> getInfo(String? url,
+  static Future<InfoBase?> getInfo(String url,
       {Duration cache = const Duration(hours: 24),
       bool multimedia = true,
       bool useMultithread = false,
@@ -87,7 +87,7 @@ class WebAnalyzer {
         info =
             await _getInfo(url, multimedia, useDesktopAgent: useDesktopAgent);
 
-      if (cache != null && info != null) {
+      if (info != null) {
         info._timeout = DateTime.now().add(cache);
         _map[url] = info;
       }
@@ -98,22 +98,22 @@ class WebAnalyzer {
     return info;
   }
 
-  static Future<InfoBase?> _getInfo(String? url, bool? multimedia,
+  static Future<InfoBase?> _getInfo(String url, bool multimedia,
       {useDesktopAgent = true}) async {
     Map<String, dynamic> result = {};
     if (Platform.isIOS) {
       result = await LinkFetch.linkFetchWithFilterLargeFile(url: url);
-      if (result == null) return null;
+      if (result.isEmpty) return null;
     } else {
-      final response = await _requestUrl(url!, useDesktopAgent: useDesktopAgent);
+      final response = await _requestUrl(url, useDesktopAgent: useDesktopAgent);
       if (response == null) return null;
       result['content-type'] = response.headers['content-type'] ?? "";
-      result['data'] = response.bodyBytes ?? Uint8List(0);
-      result['status_code'] = response.statusCode ?? "";
-      result['url'] = response.request?.url.toString() ?? url ?? "";
+      result['data'] = response.bodyBytes;
+      result['status_code'] = response.statusCode;
+      result['url'] = response.request?.url.toString() ?? url;
       print("$url ${response.statusCode}");
     }
-    if (multimedia!) {
+    if (multimedia) {
       final String? contentType = result["content-type"];
       if (contentType != null) {
         if (contentType.contains("image/")) {
@@ -133,7 +133,8 @@ class WebAnalyzer {
       {useDesktopAgent = true}) async {
     final sender = ReceivePort();
     final Isolate isolate = await Isolate.spawn(
-      (dynamic sendPort) => _isolate(sendPort, useDesktopAgent: useDesktopAgent),
+      (dynamic sendPort) =>
+          _isolate(sendPort, useDesktopAgent: useDesktopAgent),
       sender.sendPort,
     );
     final sendPort = await sender.first as SendPort;
@@ -167,24 +168,25 @@ class WebAnalyzer {
     final port = ReceivePort();
     sendPort.send(port.sendPort);
     port.listen((message) async {
-      final SendPort? sender = message[0];
-      final String? url = message[1];
-      final bool? multimedia = message[2];
+      // NOTE: 2022/2/14 此处需要确认运行时状态
+      final SendPort sender = message[0];
+      final String url = message[1] ?? '';
+      final bool multimedia = message[2] ?? false;
 
       final info =
           await _getInfo(url, multimedia, useDesktopAgent: useDesktopAgent);
 
       if (info is WebInfo) {
-        sender!.send(
+        sender.send(
             ["0", info.title, info.description, info.icon, info.mediaUrl]);
       } else if (info is WebVideoInfo) {
-        sender!.send(["1", info.mediaUrl]);
+        sender.send(["1", info.mediaUrl]);
       } else if (info is WebImageInfo) {
-        sender!.send(["2", info.mediaUrl]);
+        sender.send(["2", info.mediaUrl]);
       } else if (info is WebAudioInfo) {
-        sender!.send(["4", info.mediaUrl]);
+        sender.send(["4", info.mediaUrl]);
       } else {
-        sender!.send(null);
+        sender.send(null);
       }
       port.close();
     });
@@ -338,12 +340,10 @@ class WebAnalyzer {
     html = html.replaceFirst(_bodyReg, "<body></body>");
     final matchs = _metaReg.allMatches(html);
     final StringBuffer head = StringBuffer("<html><head>");
-    if (matchs != null) {
-      matchs.forEach((element) {
-        final String str = element.group(0)!;
-        if (str.contains(_titleReg)) head.writeln(str);
-      });
-    }
+    matchs.forEach((element) {
+      final String str = element.group(0)!;
+      if (str.contains(_titleReg)) head.writeln(str);
+    });
     head.writeln("</head></html>");
     return head.toString();
   }
@@ -365,7 +365,8 @@ class WebAnalyzer {
   static String? _getMetaContent(
       Document document, String property, String propertyValue) {
     final meta = document.head!.getElementsByTagName("meta");
-    final ele = meta.firstWhereOrNull((e) => e.attributes[property] == propertyValue);
+    final ele =
+        meta.firstWhereOrNull((e) => e.attributes[property] == propertyValue);
     if (ele != null) return ele.attributes["content"]?.trim();
     return null;
   }
@@ -376,7 +377,7 @@ class WebAnalyzer {
     final list = document.head!.getElementsByTagName("title");
     if (list.isNotEmpty) {
       final tagTitle = list.first.text;
-      if (tagTitle != null) return tagTitle.trim();
+      return tagTitle.trim();
     }
     return "";
   }
