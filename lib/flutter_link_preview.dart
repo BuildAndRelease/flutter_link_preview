@@ -4,11 +4,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
-import 'dart:typed_data';
+
 import 'package:collection/collection.dart';
+import 'package:fast_gbk/fast_gbk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_link_preview/link_fetch.dart';
-import 'package:gbk2utf8/gbk2utf8.dart';
 import 'package:html/dom.dart' hide Text;
 import 'package:html/parser.dart' as parser;
 import 'package:http/http.dart';
@@ -55,7 +55,7 @@ class FlutterLinkPreview extends StatefulWidget {
 }
 
 class _FlutterLinkPreviewState extends State<FlutterLinkPreview> {
-  String? _url;
+  late String _url;
   InfoBase? _info;
 
   @override
@@ -67,7 +67,7 @@ class _FlutterLinkPreviewState extends State<FlutterLinkPreview> {
   }
 
   Future<void> _getInfo() async {
-    if (_url!.startsWith("http")) {
+    if (_url.startsWith("http")) {
       _info = await WebAnalyzer.getInfo(
         _url,
         cache: widget.cache,

@@ -8,13 +8,10 @@ class LinkFetch {
 
   // 过滤大文件，过滤非文本数据
   static Future<Map<String, dynamic>> linkFetchWithFilterLargeFile(
-      {required String? url, String encodeUrl = "true"}) async {
+      {required String url, String encodeUrl = "true"}) async {
     try {
-      final result = await _channel.invokeMethod(
-          "linkFetchWithFilterLargeFile", <String, dynamic>{
-        "url": url ?? "",
-        "encodeUrl": encodeUrl ?? "true"
-      });
+      final result = await _channel.invokeMethod("linkFetchWithFilterLargeFile",
+          <String, dynamic>{"url": url, "encodeUrl": encodeUrl});
       return <String, dynamic>{
         'data': result['data'] ?? Uint8List(0),
         'content-type': result['content-type'] ?? "",
@@ -32,10 +29,8 @@ class LinkFetch {
   static Future<Map<String, dynamic>> linkFetch(
       {required String url, String encodeUrl = "true"}) async {
     try {
-      final result = await _channel.invokeMethod("linkFetch", <String, dynamic>{
-        "url": url ?? "",
-        "encodeUrl": encodeUrl ?? "true"
-      });
+      final result = await _channel.invokeMethod(
+          "linkFetch", <String, dynamic>{"url": url, "encodeUrl": encodeUrl});
       return <String, dynamic>{
         'data': result['data'] ?? Uint8List(0),
         'content-type': result['content-type'] ?? "",
@@ -53,11 +48,8 @@ class LinkFetch {
   static Future<Map<String, String>> linkFetchHead(
       {required String url, String encodeUrl = "true"}) async {
     try {
-      final result = await _channel.invokeMethod(
-          "linkFetchHead", <String, dynamic>{
-        "url": url ?? "",
-        "encodeUrl": encodeUrl ?? "true"
-      });
+      final result = await _channel.invokeMethod("linkFetchHead",
+          <String, dynamic>{"url": url, "encodeUrl": encodeUrl});
       final formatResult = <String, String>{};
       result.forEach((key, value) {
         formatResult[key.toString().toLowerCase()] =
