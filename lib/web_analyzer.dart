@@ -192,12 +192,25 @@ class WebAnalyzer {
     });
   }
 
-  static final Map<String, String> _cookies = {
-    "weibo.com":
-        "YF-Page-G0=02467fca7cf40a590c28b8459d93fb95|1596707497|1596707497; SUB=_2AkMod12Af8NxqwJRmf8WxGjna49_ygnEieKeK6xbJRMxHRl-yT9kqlcftRB6A_dzb7xq29tqJiOUtDsy806R_ZoEGgwS; SUBP=0033WrSXqPxfM72-Ws9jqgMF55529P9D9W59fYdi4BXCzHNAH7GabuIJ",
-    "m.weibo.cn":
-        "YF-Page-G0=02467fca7cf40a590c28b8459d93fb95|1596707497|1596707497; SUB=_2AkMod12Af8NxqwJRmf8WxGjna49_ygnEieKeK6xbJRMxHRl-yT9kqlcftRB6A_dzb7xq29tqJiOUtDsy806R_ZoEGgwS; SUBP=0033WrSXqPxfM72-Ws9jqgMF55529P9D9W59fYdi4BXCzHNAH7GabuIJ"
-  };
+  // static final Map<String, String> _cookies = {
+  //   "weibo.com":
+  //       "YF-Page-G0=02467fca7cf40a590c28b8459d93fb95|1596707497|1596707497; SUB=_2AkMod12Af8NxqwJRmf8WxGjna49_ygnEieKeK6xbJRMxHRl-yT9kqlcftRB6A_dzb7xq29tqJiOUtDsy806R_ZoEGgwS; SUBP=0033WrSXqPxfM72-Ws9jqgMF55529P9D9W59fYdi4BXCzHNAH7GabuIJ",
+  //   "m.weibo.cn":
+  //       "YF-Page-G0=02467fca7cf40a590c28b8459d93fb95|1596707497|1596707497; SUB=_2AkMod12Af8NxqwJRmf8WxGjna49_ygnEieKeK6xbJRMxHRl-yT9kqlcftRB6A_dzb7xq29tqJiOUtDsy806R_ZoEGgwS; SUBP=0033WrSXqPxfM72-Ws9jqgMF55529P9D9W59fYdi4BXCzHNAH7GabuIJ"
+  // };
+
+  static String? _getCookies(String host) {
+    if (host.contains("m.weibo.cn")) {
+      return "YF-Page-G0=02467fca7cf40a590c28b8459d93fb95|1596707497|1596707497; SUB=_2AkMod12Af8NxqwJRmf8WxGjna49_ygnEieKeK6xbJRMxHRl-yT9kqlcftRB6A_dzb7xq29tqJiOUtDsy806R_ZoEGgwS; SUBP=0033WrSXqPxfM72-Ws9jqgMF55529P9D9W59fYdi4BXCzHNAH7GabuIJ";
+    }
+    if (host.contains("weibo.com")) {
+      return "YF-Page-G0=02467fca7cf40a590c28b8459d93fb95|1596707497|1596707497; SUB=_2AkMod12Af8NxqwJRmf8WxGjna49_ygnEieKeK6xbJRMxHRl-yT9kqlcftRB6A_dzb7xq29tqJiOUtDsy806R_ZoEGgwS; SUBP=0033WrSXqPxfM72-Ws9jqgMF55529P9D9W59fYdi4BXCzHNAH7GabuIJ";
+    }
+    if (host.contains("feishu.cn")) {
+      return "session=U7CK1RF-c09t7d68-96e8-48b1-b4fe-dd9bf5426931-NN5W4";
+    }
+    return null;
+  }
 
   static bool _certificateCheck(X509Certificate cert, String host, int port) =>
       true;
@@ -217,13 +230,15 @@ class WebAnalyzer {
           ? "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36"
           : "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
       ..headers["cache-control"] = "no-cache"
-      ..headers["Cookie"] = cookie ?? _cookies[uri.host]!
-      ..headers["accept"] = "*/*";
+      ..headers["Cookie"] = cookie ?? _getCookies(uri.host) ?? ""
+      ..headers["accept"] = "*/*"
+      ..headers['Host'] = uri.host;
     // print(request.headers);
     final stream = await client.send(request);
 
     if (stream.statusCode == HttpStatus.movedTemporarily ||
-        stream.statusCode == HttpStatus.movedPermanently) {
+        stream.statusCode == HttpStatus.movedPermanently ||
+        stream.statusCode == HttpStatus.temporaryRedirect) {
       if (stream.isRedirect && count < 6) {
         final String? location = stream.headers['location'];
         if (location != null) {
