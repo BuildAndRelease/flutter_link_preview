@@ -33,7 +33,10 @@ class LinkFetchWithFilterLargeFile : NSObject, URLSessionDataDelegate{
         request.httpMethod = "GET"
         request.addValue("no-cache", forHTTPHeaderField: "cache-control")
         request.addValue("*/*", forHTTPHeaderField: "accept")
-        request.addValue(link.host ?? "", forHTTPHeaderField: "Host")
+        //飞书、小红书加host
+        if let hostString = link.host, ( hostString.contains("feishu.cn") || hostString.contains("xiaohongshu.com") || hostString.contains("xhslink.com") ) {
+            request.addValue(hostString, forHTTPHeaderField: "Host")
+        }
         var useDesktopAgent = false
         // add cookie
         if let hostString = link.host, (hostString.contains("weibo.com") || hostString.contains("weibo.cn")) {
