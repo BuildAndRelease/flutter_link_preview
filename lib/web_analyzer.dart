@@ -102,7 +102,7 @@ class WebAnalyzer {
       {useDesktopAgent = true}) async {
     Map<String, dynamic> result = {};
     if (Platform.isIOS) {
-      result = await LinkFetch.linkFetchWithFilterLargeFile(url: url);
+      result = await LinkFetch.linkFetchWithFilterLargeFile(url: url,encodeUrl: "false");
       if (result.isEmpty) return null;
     } else {
       final response = await _requestUrl(url, useDesktopAgent: useDesktopAgent);
