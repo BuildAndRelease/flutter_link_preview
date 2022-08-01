@@ -72,11 +72,14 @@ class WebAnalyzer {
 
   /// Get web information
   /// return [InfoBase]
-  static Future<InfoBase?> getInfo(String url,
-      {Duration cache = const Duration(hours: 24),
-      bool multimedia = true,
-      bool useMultithread = false,
-      bool useDesktopAgent = true}) async {
+  static Future<InfoBase?> getInfo(
+    String url, {
+    Duration cache = const Duration(hours: 24),
+    bool multimedia = true,
+    bool useMultithread = false,
+    bool useDesktopAgent = true,
+    Map<String, String>? customHeader,
+  }) async {
     InfoBase? info = getInfoFromCache(url);
     if (info != null) return info;
     try {
@@ -84,8 +87,12 @@ class WebAnalyzer {
         info = await _getInfoByIsolate(url, multimedia,
             useDesktopAgent: useDesktopAgent);
       else
-        info =
-            await _getInfo(url, multimedia, useDesktopAgent: useDesktopAgent);
+        info = await _getInfo(
+          url,
+          multimedia,
+          useDesktopAgent: useDesktopAgent,
+          customHeader: customHeader,
+        );
 
       if (info != null) {
         info._timeout = DateTime.now().add(cache);
@@ -98,14 +105,20 @@ class WebAnalyzer {
     return info;
   }
 
-  static Future<InfoBase?> _getInfo(String url, bool multimedia,
-      {useDesktopAgent = true}) async {
+  static Future<InfoBase?> _getInfo(
+    String url,
+    bool multimedia, {
+    useDesktopAgent = true,
+    Map<String, String>? customHeader,
+  }) async {
     Map<String, dynamic> result = {};
     if (Platform.isIOS) {
-      result = await LinkFetch.linkFetchWithFilterLargeFile(url: url,encodeUrl: "false");
+      result = await LinkFetch.linkFetchWithFilterLargeFile(
+          url: url, encodeUrl: "false");
       if (result.isEmpty) return null;
     } else {
-      final response = await _requestUrl(url, useDesktopAgent: useDesktopAgent);
+      final response = await _requestUrl(url,
+          useDesktopAgent: useDesktopAgent, customHeader: customHeader);
       if (response == null) return null;
       result['content-type'] = response.headers['content-type'] ?? "";
       result['data'] = response.bodyBytes;
@@ -129,12 +142,16 @@ class WebAnalyzer {
     return _getWebInfo(result, url, multimedia);
   }
 
-  static Future<InfoBase?> _getInfoByIsolate(String? url, bool multimedia,
-      {useDesktopAgent = true}) async {
+  static Future<InfoBase?> _getInfoByIsolate(
+    String? url,
+    bool multimedia, {
+    useDesktopAgent = true,
+    Map<String, String>? customHeader,
+  }) async {
     final sender = ReceivePort();
     final Isolate isolate = await Isolate.spawn(
-      (dynamic sendPort) =>
-          _isolate(sendPort, useDesktopAgent: useDesktopAgent),
+      (dynamic sendPort) => _isolate(sendPort,
+          useDesktopAgent: useDesktopAgent, customHeader: customHeader),
       sender.sendPort,
     );
     final sendPort = await sender.first as SendPort;
@@ -164,7 +181,11 @@ class WebAnalyzer {
     return info;
   }
 
-  static void _isolate(SendPort sendPort, {useDesktopAgent = true}) {
+  static void _isolate(
+    SendPort sendPort, {
+    useDesktopAgent = true,
+    Map<String, String>? customHeader,
+  }) {
     final port = ReceivePort();
     sendPort.send(port.sendPort);
     port.listen((message) async {
@@ -173,8 +194,8 @@ class WebAnalyzer {
       final String url = message[1] ?? '';
       final bool multimedia = message[2] ?? false;
 
-      final info =
-          await _getInfo(url, multimedia, useDesktopAgent: useDesktopAgent);
+      final info = await _getInfo(url, multimedia,
+          useDesktopAgent: useDesktopAgent, customHeader: customHeader);
 
       if (info is WebInfo) {
         sender.send(
@@ -216,7 +237,10 @@ class WebAnalyzer {
       true;
 
   static Future<Response?> _requestUrl(String url,
-      {int count = 0, String? cookie, useDesktopAgent = true}) async {
+      {int count = 0,
+      String? cookie,
+      Map<String, String>? customHeader,
+      useDesktopAgent = true}) async {
     if (url.contains("m.toutiaoimg.cn")) useDesktopAgent = false;
     if (url.contains("weibo.com") || url.contains("m.weibo.cn"))
       useDesktopAgent = false;
@@ -232,7 +256,8 @@ class WebAnalyzer {
       ..headers["cache-control"] = "no-cache"
       ..headers["Cookie"] = cookie ?? _getCookies(uri.host) ?? ""
       ..headers["accept"] = "*/*"
-      ..headers['Host'] = uri.host;
+      ..headers['Host'] = uri.host
+      ..headers.addAll(customHeader ?? {});
     // print(request.headers);
     final stream = await client.send(request);
 
